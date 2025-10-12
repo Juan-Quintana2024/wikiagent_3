@@ -1,0 +1,39 @@
+services:
+  crawler:
+    build: ./crawler
+    container_name: crawler
+    volumes:
+      - ./crawler:/app
+    command: python app.py
+    networks:
+      - wikinet
+
+  extractor:
+    build: ./extractor
+    container_name: extractor
+    volumes:
+      - ./extractor:/app
+    command: python app.py
+    networks:
+      - wikinet
+
+  summarizer:
+    build: ./summarizer
+    container_name: summarizer
+    volumes:
+      - ./summarizer:/app
+    command: python app.py
+    networks:
+      - wikinet
+
+  publisher:
+    build: ./publisher
+    container_name: publisher
+    volumes:
+      - ./publisher:/app
+    command: python app.py
+    networks:
+      - wikinet
+
+networks:
+  wikinet:

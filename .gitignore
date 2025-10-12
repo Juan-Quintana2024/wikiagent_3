@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+venv/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Docker
+*.log
+*.pid
+*.pid.lock
+
+# VS Code
+.vscode/
+.history/
+.DS_Store
+
+# System
+Thumbs.db
+*.swp
