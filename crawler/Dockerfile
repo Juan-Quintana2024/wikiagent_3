@@ -1,17 +1,21 @@
-# Base image
 FROM python:3.11-slim
 
-# Set working directory
+# good defaults
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
 WORKDIR /app
 
-# Copy project files into the container
-COPY . /app
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install dependencies (add your crawler requirements here)
-RUN pip install --no-cache-dir requests beautifulsoup4 playwright
+# install Python deps via requirements for better build caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose nothing externally (internal network use only)
-EXPOSE 8000
+# now copy your code
+COPY . .
 
-# Default command
+# no external port needed for the crawler
 CMD ["python", "app.py"]
