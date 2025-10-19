@@ -4,36 +4,102 @@ services:
     container_name: crawler
     volumes:
       - ./crawler:/app
+      - ./data:/data
+      - ./config:/config
+    environment:
+      CRAWL_CFG: /config/whitelist.yml
     command: python app.py
-    networks:
-      - wikinet
+    networks: [wikinet]
 
   extractor:
     build: ./extractor
     container_name: extractor
     volumes:
       - ./extractor:/app
+      - ./data:/data
+    environment:
+      BRAIN_BASE_URL: http://brain:8000
+      DB_PATH: /data/wiki.db
     command: python app.py
-    networks:
-      - wikinet
+    networks: [wikinet]
+    depends_on:
+      - brain
+      - db
 
   summarizer:
     build: ./summarizer
     container_name: summarizer
     volumes:
       - ./summarizer:/app
+      - ./data:/data
+    environment:
+      BRAIN_BASE_URL: http://brain:8000
+      DB_PATH: /data/wiki.db
     command: python app.py
-    networks:
-      - wikinet
+    networks: [wikinet]
+    depends_on:
+      - brain
+      - db
 
   publisher:
     build: ./publisher
     container_name: publisher
     volumes:
       - ./publisher:/app
+      - ./data:/data
+    environment:
+      BRAIN_BASE_URL: http://brain:8000
+      DB_PATH: /data/wiki.db
     command: python app.py
-    networks:
-      - wikinet
+    networks: [wikinet]
+    depends_on:
+      - brain
+      - db
+
+  db:
+    image: busybox:latest
+    container_name: db
+    command: sh -c "mkdir -p /data && tail -f /dev/null"
+    volumes:
+      - ./data:/data
+    networks: [wikinet]
+    restart: unless-stopped
+
+  brain:
+    build: ./brain
+    container_name: brain
+    environment:
+      DB_PATH: /data/wiki.db
+      LLM_API_BASE: http://host.docker.internal:1234/v1
+      LLM_API_KEY: lm-studio
+      MODEL: openai/gpt-oss-20b
+    volumes:
+      - ./data:/data
+    depends_on:
+      - db
+    networks: [wikinet]
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+
+  wiki:
+    image: busybox:latest
+    container_name: wiki
+    environment:
+      TIDDLERS_DIR: /data/tiddlers
+      SITE_DIR: /site
+      DB_PATH: /data/wiki.db
+      BRAIN_BASE_URL: http://brain:8000
+    volumes:
+      - ./data:/data
+      - ./site:/site
+    depends_on:
+      - brain
+      - db
+    networks: [wikinet]
+    restart: unless-stopped
+    command: sh -c "mkdir -p /site && tail -f /dev/null"
+
 
 networks:
   wikinet:

@@ -1,0 +1,22 @@
+seeds:
+  - https://en.wikipedia.org/wiki/Nanjing
+  - https://en.wikipedia.org/wiki/Category:Nanjing
+
+include_patterns:
+  - '^https://en[.]wikipedia[.]org/wiki/.*'
+
+exclude_patterns:
+  - '^https://en[.]wikipedia[.]org/wiki/(Talk:|File:|Help:|Special:|Template:|Portal:).*'
+  - '[.](jpg|jpeg|png|gif|svg|pdf)$'
+  - '#'
+  - 'action=edit'
+
+respect_robots: false
+
+rate_limit:
+  per_host_rps: 2
+  max_parallel: 8
+
+limits:
+  max_pages: 900
+  max_depth: 2
