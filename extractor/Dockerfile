@@ -1,10 +1,7 @@
 FROM python:3.11-slim
-
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
-COPY . /app
-
-# Install text-cleaning and HTML parsing dependencies
-RUN pip install --no-cache-dir beautifulsoup4 lxml
-
-EXPOSE 8001
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 CMD ["python", "app.py"]
