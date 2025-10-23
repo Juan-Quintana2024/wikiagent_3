@@ -24,3 +24,54 @@ yarn-error.log
 # System
 Thumbs.db
 *.swp
+# local envs & caches
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.DS_Store
+
+# data/output (keep folders, not contents)
+data/*
+!data/.gitkeep
+site/*
+!site/.gitkeep
+
+# sqlite/db dumps
+*.sqlite
+*.db
+*.log
+# local envs & caches
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.DS_Store
+
+# data/output (keep folders, not contents)
+data/*
+!data/.gitkeep
+site/*
+!site/.gitkeep
+
+# sqlite/db dumps
+*.sqlite
+*.db
+*.log
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# large/local data
+data/*
+!data/.gitkeep
+site/*
+!site/.gitkeep
+
+# sqlite/db artifacts
+*.sqlite
+*.db
+*.log
