@@ -34,23 +34,35 @@ services:
       - ./summarizer:/app
       - ./data:/data
     environment:
-      BRAIN_BASE_URL: http://brain:8000
-      DB_PATH: /data/wiki.sqlite
+      LLM_BASE_URL: http://anjso.ddns.net:13001/api/v1/openai
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: anjso
+      # LLM_BASE_URL: https://kami-hysterogenic-drema.ngrok-free.dev/v1
+      # LLM_API_KEY: local
+      # LLM_MODEL: meta-llama-3.1-8b-instruct
+      DATA_DIR: /data
+      IDLE_INTERVAL: 60
     command: python app.py
     networks: [wikinet]
     depends_on:
-      - brain
-      - db
+      - extractor
+
 
   publisher:
     build: ./publisher
     container_name: publisher
     volumes:
       - ./publisher:/app
-      - ./data:/data
+      - ./data:/data    # where JSON/DB live
+      - ./site:/site    # write static site here
     environment:
       BRAIN_BASE_URL: http://brain:8000
       DB_PATH: /data/wiki.sqlite
+      DATA_DIR: /data
+      SUMMARY_DIR: /data/summarized
+      SITE_DIR: /site
+      WIKI_WORKDIR: /tmp/wiki
+      DEPLOY: "0"     # skip pushing to GitHub for now
     command: python app.py
     networks: [wikinet]
     depends_on:
