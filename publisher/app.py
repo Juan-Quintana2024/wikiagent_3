@@ -27,17 +27,20 @@ import os, json, subprocess, hashlib, re
 from pathlib import Path
 from datetime import datetime
 
+# Read environment variables for directories
 DATA_DIR     = Path(os.getenv("DATA_DIR", "/data"))
 SUMMARY_DIR  = Path(os.getenv("SUMMARY_DIR", str(DATA_DIR / "summarized")))
 SITE_DIR     = Path(os.getenv("SITE_DIR", "/site"))
 WIKI_WORKDIR = Path(os.getenv("WIKI_WORKDIR", "/tmp/wiki"))
 
+# create url-friendly for filenames
 _slug_re = re.compile(r"[^a-z0-9-_]")
 def slugify(s: str) -> str:
     s = (s or "untitled").lower().strip().replace(" ", "-")
     s = _slug_re.sub("-", s)
     return re.sub(r"-{2,}", "-", s)[:80]
 
+# ensure Tiddlywiki project structure exists, create a tiddlywiki.info file
 def ensure_tw_project():
     (WIKI_WORKDIR / "tiddlers").mkdir(parents=True, exist_ok=True)
     info = {
@@ -49,6 +52,7 @@ def ensure_tw_project():
     }
     (WIKI_WORKDIR / "tiddlywiki.info").write_text(json.dumps(info), encoding="utf-8")
 
+# create tiddlers from JSON summaries, build .tid files
 def create_tiddlers() -> int:
     tiddlers_dir = WIKI_WORKDIR / "tiddlers"
     tiddlers_dir.mkdir(parents=True, exist_ok=True)
@@ -59,6 +63,7 @@ def create_tiddlers() -> int:
             title   = data.get("title") or json_path.stem
             body    = data.get("summary") or data.get("text") or "No summary available."
             tags    = data.get("tags") or ["summary"]
+            source  = data.get("url") or "unknown"
             created = datetime.utcnow().strftime("%Y%m%d%H%M%S")
             sid     = hashlib.sha1(title.encode("utf-8")).hexdigest()[:8]
             fname   = f"{slugify(title)}-{sid}.tid"
@@ -69,7 +74,8 @@ def create_tiddlers() -> int:
                 f"type: text/vnd.tiddlywiki\n"
                 f"created: {created}\n"
                 f"modified: {created}\n\n"
-                f"{body}\n"
+                f"{body}\n\n"
+                f"source: {source}\n"
             )
             (tiddlers_dir / fname).write_text(tid, encoding="utf-8")
             count += 1
@@ -78,6 +84,7 @@ def create_tiddlers() -> int:
     print(f"[publisher] Created {count} tiddlers from {SUMMARY_DIR}")
     return count
 
+# inject theme, style, and site title before building
 def inject_theme_tiddlers():
     """Add theme and style overrides before building the wiki."""
     tiddlers_dir = WIKI_WORKDIR / "tiddlers"
@@ -147,6 +154,7 @@ h1, h2, h3 {
         encoding="utf-8"
     )
 
+# Creates the wiki by invoking TiddlyWiki CLI
 def build_wiki():
     print("[publisher] Building wiki…", flush=True)
     ensure_tw_project()
@@ -165,6 +173,7 @@ def build_wiki():
     else:
         print("[publisher] ERROR: TiddlyWiki did not produce index.html", flush=True)
 
+# Main function prints current dirs, creates tiddlers, and builds the wiki
 def main():
     print(f"[publisher] SUMMARY_DIR={SUMMARY_DIR} SITE_DIR={SITE_DIR}", flush=True)
     created = create_tiddlers()

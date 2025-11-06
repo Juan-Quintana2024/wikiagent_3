@@ -1,0 +1,61 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # allow manual trigger
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build all services
+        run: docker compose build
+
+      - name: Run publisher to generate site
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          # Ensure clean output folder
+          rm -rf ./site || true
+          mkdir -p ./site
+          # Start dependent services (brain + db)
+          docker compose up -d brain db
+          sleep 10
+          # Run publisher once to generate static content
+          docker compose run --rm publisher
+          # Stop all containers
+          docker compose down
+
+      - name: Verify generated site
+        run: |
+          ls -al ./site
+          test -f ./site/index.html || (echo "No index.html found!" && exit 1)
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
